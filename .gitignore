@@ -22,3 +22,6 @@
 ### Go Patch ###
 /vendor/
 /Godeps/
+
+# Templates (use templates from the subrepository)
+templates/*

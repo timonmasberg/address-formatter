@@ -1,7 +1,8 @@
 package address_formatter
 
 type Address struct {
-	HouseNumber   int
+	Attention     string
+	HouseNumber   string
 	House         string
 	Road          string
 	Hamlet        string
@@ -13,7 +14,9 @@ type Address struct {
 	StateDistrict string
 	Postcode      string
 	State         string
+	Suburb        string
 	Region        string
+	Town          string
 	Island        string
 	Archipelago   string
 	Country       string
