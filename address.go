@@ -11,9 +11,11 @@ type Address struct {
 	City          string
 	Municipality  string
 	County        string
+	CountyCode    string
 	StateDistrict string
-	Postcode      string
 	State         string
+	StateCode     string
+	Postcode      string
 	Suburb        string
 	Region        string
 	Town          string
@@ -23,3 +25,5 @@ type Address struct {
 	CountryCode   string
 	Continent     string
 }
+
+type addressMap map[string]string
