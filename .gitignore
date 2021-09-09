@@ -23,5 +23,7 @@
 /vendor/
 /Godeps/
 
-# Templates (use templates from the subrepository)
+# Templates (use templates from the submodule or your own)
 templates/*
+# Testcases (use testcases from the submodule or your own)
+testcases/*
