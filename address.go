@@ -2,22 +2,24 @@ package address_formatter
 
 type Address struct {
 	Attention     string
-	HouseNumber   string
 	House         string
+	HouseNumber   string
 	Road          string
 	Hamlet        string
 	Village       string
+	Neighbourhood string
 	PostalCity    string
 	City          string
+	CityDistrict  string
 	Municipality  string
 	County        string
 	CountyCode    string
 	StateDistrict string
+	Postcode      string
 	State         string
 	StateCode     string
-	Postcode      string
-	Suburb        string
 	Region        string
+	Suburb        string
 	Town          string
 	Island        string
 	Archipelago   string
