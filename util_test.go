@@ -143,7 +143,7 @@ func (suite *UtilityTestSuite) TestMapToAddress() {
 		Continent:     "voluptua",
 	}
 
-	address := MapToAddress(addressMap, suite.Config)
+	address := MapToAddress(addressMap, suite.Config.ComponentAliases, true)
 
 	suite.Equal(address, expectedAddress)
 }
@@ -195,7 +195,7 @@ func (suite *UtilityTestSuite) TestMapToAddressAliases() {
 		Continent:     "sanctus",
 	}
 
-	address := MapToAddress(addressMap, suite.Config)
+	address := MapToAddress(addressMap, suite.Config.ComponentAliases, true)
 
 	suite.Equal(address, expectedAddress)
 }

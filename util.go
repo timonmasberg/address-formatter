@@ -3,6 +3,7 @@ package address_formatter
 import (
 	"errors"
 	"reflect"
+	"strings"
 )
 
 var addressMemberNameMapping = map[string]string{
@@ -55,9 +56,9 @@ func addressToMap(address *Address) (addressMap, error) {
 }
 
 // MapToAddress Convert map of address components used in OpenCageData templates and their aliases into an Address struct
-func MapToAddress(addressMap addressMap, config *Config) *Address {
+func MapToAddress(addressMap addressMap, componentAliases map[string]string, unknownAsAttention bool) *Address {
 	// replace common aliases with their main keys used in templates
-	addressMap = applyComponentAliases(addressMap, config)
+	addressMap = applyComponentAliases(addressMap, componentAliases)
 
 	// invert addressMemberNameMapping to map component names to Address struct fields
 	componentNameAddressFieldMapping := getNameAddressFieldMapping()
@@ -65,21 +66,32 @@ func MapToAddress(addressMap addressMap, config *Config) *Address {
 	var address Address
 	av := reflect.ValueOf(&address).Elem()
 
+	unknownFieldValues := make([]string, 0)
+
 	for k, v := range addressMap {
 		name, hasCorrespondingField := componentNameAddressFieldMapping[k]
 
 		if hasCorrespondingField {
 			av.FieldByName(name).Set(reflect.ValueOf(v))
+		} else // has no corresponding field and is also not an alias => attention
+		if _, hasAlias := componentAliases[k]; unknownAsAttention && !hasAlias {
+			unknownFieldValues = append(unknownFieldValues, v)
 		}
+	}
+
+	if attention, hasAttention := addressMap["attention"]; hasAttention {
+		address.Attention = attention
+	} else {
+		address.Attention = strings.Join(unknownFieldValues, ", ")
 	}
 
 	return &address
 }
 
 // this duplicates values from the alias to the given component name mapping
-func applyComponentAliases(addressMap addressMap, config *Config) addressMap {
+func applyComponentAliases(addressMap addressMap, componentAliases map[string]string) addressMap {
 	for k, v := range addressMap {
-		if alias, hasAlias := config.ComponentAliases[k]; hasAlias {
+		if alias, hasAlias := componentAliases[k]; hasAlias {
 			if _, aliasAlreadyGiven := addressMap[alias]; !aliasAlreadyGiven || addressMap[alias] == "" {
 				addressMap[alias] = v
 			}
@@ -96,4 +108,14 @@ func getNameAddressFieldMapping() map[string]string {
 	}
 
 	return componentNameAddressFieldMapping
+}
+
+func findTemplate(countryCode string, templates map[string]interface{}) template {
+	template, hasTemplate := templates[countryCode]
+
+	if hasTemplate {
+		return template
+	}
+
+	return templates["default"]
 }
