@@ -41,14 +41,16 @@ func addressToMap(address *Address) (addressMap, error) {
 	addressType := v.Type()
 
 	for i := 0; i < v.NumField(); i++ {
-		fi := addressType.Field(i)
+		if !v.Field(i).IsZero() {
+			fi := addressType.Field(i)
 
-		mapFieldName, hasMapping := addressMemberNameMapping[fi.Name]
+			mapFieldName, hasMapping := addressMemberNameMapping[fi.Name]
 
-		if hasMapping {
-			addressMap[mapFieldName] = v.Field(i).String()
-		} else {
-			return nil, errors.New(fi.Name + " has no corresponding Name")
+			if hasMapping {
+				addressMap[mapFieldName] = v.Field(i).String()
+			} else {
+				return nil, errors.New(fi.Name + " has no corresponding Name")
+			}
 		}
 	}
 
@@ -110,7 +112,7 @@ func getNameAddressFieldMapping() map[string]string {
 	return componentNameAddressFieldMapping
 }
 
-func findTemplate(countryCode string, templates map[string]interface{}) template {
+func findTemplate(countryCode string, templates map[string]template) template {
 	template, hasTemplate := templates[countryCode]
 
 	if hasTemplate {
