@@ -47,7 +47,6 @@ func addressToMap(address *Address) (addressMap, error) {
 			fi := addressType.Field(i)
 
 			mapFieldName, hasMapping := addressMemberNameMapping[fi.Name]
-
 			if hasMapping {
 				addressMap[mapFieldName] = v.Field(i).String()
 			} else {
@@ -60,7 +59,7 @@ func addressToMap(address *Address) (addressMap, error) {
 }
 
 // MapToAddress Convert map of address components used in OpenCageData templates and their aliases into an Address struct
-func MapToAddress(addressMap addressMap, componentAliases map[string]string, unknownAsAttention bool) *Address {
+func MapToAddress(addressMap addressMap, componentAliases map[string]componentAlias, unknownAsAttention bool) *Address {
 	// replace common aliases with their main keys used in templates
 	addressMap = applyComponentAliases(addressMap, componentAliases)
 
@@ -85,7 +84,7 @@ func MapToAddress(addressMap addressMap, componentAliases map[string]string, unk
 
 	if attention, hasAttention := addressMap["attention"]; hasAttention {
 		address.Attention = attention
-	} else {
+	} else if unknownAsAttention {
 		address.Attention = strings.Join(unknownFieldValues, ", ")
 	}
 
@@ -93,11 +92,15 @@ func MapToAddress(addressMap addressMap, componentAliases map[string]string, unk
 }
 
 // this duplicates values from the alias to the given component name mapping
-func applyComponentAliases(addressMap addressMap, componentAliases map[string]string) addressMap {
+func applyComponentAliases(addressMap addressMap, componentAliases map[string]componentAlias) addressMap {
+	// helper to remain order provided in config file
+	aliasRanking := make(map[string]int)
+
 	for k, v := range addressMap {
 		if alias, hasAlias := componentAliases[k]; hasAlias {
-			if _, aliasAlreadyGiven := addressMap[alias]; !aliasAlreadyGiven || addressMap[alias] == "" {
-				addressMap[alias] = v
+			if addressMap[alias.componentName] == "" || aliasRanking[alias.componentName] > alias.aliasOrderRank {
+				addressMap[alias.componentName] = v
+				aliasRanking[alias.componentName] = alias.aliasOrderRank
 			}
 		}
 	}

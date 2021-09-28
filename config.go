@@ -13,6 +13,10 @@ const componentFileDelimiter = "---"
 
 type template interface{}
 type abbreviation map[string]map[string]string
+type componentAlias struct {
+	componentName  string
+	aliasOrderRank int
+}
 type ConfigFiles struct {
 	CountriesPath     string
 	ComponentsPath    string
@@ -22,23 +26,32 @@ type ConfigFiles struct {
 	CountryCodesPath  string
 	AbbreviationFiles string
 }
+type OutputFormat int
+
+const (
+	Array        OutputFormat = iota
+	OneLine      OutputFormat = iota
+	PostalFormat OutputFormat = iota
+)
+
 type Config struct {
-	Components       map[string][]string
-	ComponentAliases map[string]string
-	Templates        map[string]interface{}
-	StateCodes       map[string]map[string]interface{}
-	CountryToLang    map[string]interface{}
-	CountyCodes      map[string]interface{}
-	CountryCodes     map[string]string
-	Abbreviations    map[string]abbreviation
+	ComponentAliases   map[string]componentAlias
+	Templates          map[string]template
+	StateCodes         map[string]map[string]interface{}
+	CountryToLang      map[string]interface{}
+	CountyCodes        map[string]map[string]interface{}
+	CountryCodes       map[string]string
+	Abbreviations      map[string]abbreviation
+	Abbreviate         bool
+	UnknownAsAttention bool
+	OutputFormat       OutputFormat
 }
 
 // LoadConfig parses the configuration files into a Config structure
 func LoadConfig(configFiles ConfigFiles) *Config {
 	var config Config
 
-	// todo: check if passing a reference is cleaner than returning values for non-interface types
-	config.Components, config.ComponentAliases = loadComponentsAndAliasesConfig(configFiles.ComponentsPath)
+	config.ComponentAliases = getComponentsAliasesConfig(configFiles.ComponentsPath)
 	config.Abbreviations = loadAbbreviationConfig(configFiles.AbbreviationFiles)
 	config.CountryCodes = loadCountryCodesConfig(configFiles.CountryCodesPath)
 	loadConfig(configFiles.CountriesPath, &config.Templates)
@@ -74,15 +87,15 @@ func loadCountryCodesConfig(countryCodesPath string) map[string]string {
 	return countryCodes
 }
 
-func loadComponentsAndAliasesConfig(componentsPath string) (map[string][]string, map[string]string) {
+func getComponentsAliasesConfig(componentsPath string) map[string]componentAlias {
 	componentFileContent := getFileContent(componentsPath)
 	componentParts := strings.Split(componentFileContent, componentFileDelimiter)
-	componentAliases := make(map[string]string)
-	components := make(map[string][]string)
+
+	componentAliases := make(map[string]componentAlias)
 
 	for _, componentPart := range componentParts {
 		var component struct {
-			Name    string   `yaml:"Name"`
+			Name    string   `yaml:"name"`
 			Aliases []string `yaml:"aliases"`
 		}
 
@@ -93,15 +106,13 @@ func loadComponentsAndAliasesConfig(componentsPath string) (map[string][]string,
 		}
 
 		if len(component.Aliases) > 0 {
-			for _, alias := range component.Aliases {
-				componentAliases[alias] = component.Name
+			for i, alias := range component.Aliases {
+				componentAliases[alias] = componentAlias{component.Name, i}
 			}
 		}
-
-		components[component.Name] = component.Aliases
 	}
 
-	return components, componentAliases
+	return componentAliases
 }
 
 func loadAbbreviationConfig(abbreviationPath string) map[string]abbreviation {
