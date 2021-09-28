@@ -1,4 +1,4 @@
-package address_formatter
+package addrFmt
 
 type Address struct {
 	Attention     string

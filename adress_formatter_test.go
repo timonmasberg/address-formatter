@@ -1,4 +1,4 @@
-package address_formatter
+package addrFmt
 
 import (
 	"github.com/stretchr/testify/suite"
