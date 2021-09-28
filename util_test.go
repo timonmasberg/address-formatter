@@ -199,3 +199,77 @@ func (suite *UtilityTestSuite) TestMapToAddressAliases() {
 
 	suite.Equal(address, expectedAddress)
 }
+
+func (suite *UtilityTestSuite) TestMapToAddressUnknownComponents() {
+	addressMap := addressMap{
+		"attention":      "Lorem",
+		"house_number":   "ipsum",
+		"house":          "dolor",
+		"road":           "sit",
+		"hamlet":         "amet",
+		"village":        "consetetur",
+		"neighbourhood":  "estitius",
+		"postal_city":    "sadipscing",
+		"city":           "elitr",
+		"municipality":   "sed",
+		"county":         "diam",
+		"county_code":    "nonumy",
+		"state_district": "eirmod",
+		"state":          "ut",
+		"state_code":     "tempor",
+		"postcode":       "invidunt",
+		"suburb":         "labore",
+		"region":         "gubergren",
+		"town":           "sanctus",
+		"island":         "magna",
+		"archipelago":    "aliquyam",
+		"country":        "erat",
+		"country_code":   "wisi",
+		"continent":      "voluptua",
+		"unknown1":       "foo",
+		"unknown2":       "bar",
+		"unknown3":       "qux",
+	}
+	expectedAddress := &Address{
+		Attention:     "Lorem",
+		House:         "dolor",
+		HouseNumber:   "ipsum",
+		Road:          "sit",
+		Hamlet:        "amet",
+		Village:       "consetetur",
+		Neighbourhood: "estitius",
+		PostalCity:    "sadipscing",
+		City:          "elitr",
+		Municipality:  "sed",
+		County:        "diam",
+		CountyCode:    "nonumy",
+		StateDistrict: "eirmod",
+		Postcode:      "invidunt",
+		State:         "ut",
+		StateCode:     "tempor",
+		Region:        "gubergren",
+		Suburb:        "labore",
+		Town:          "sanctus",
+		Island:        "magna",
+		Archipelago:   "aliquyam",
+		Country:       "erat",
+		CountryCode:   "wisi",
+		Continent:     "voluptua",
+	}
+
+	// should not override attention
+	// has attention
+	suite.Equal(expectedAddress, MapToAddress(addressMap, suite.Config.ComponentAliases, false),
+		"Provided attention not present in Address")
+	suite.Equal(expectedAddress, MapToAddress(addressMap, suite.Config.ComponentAliases, true),
+		"Provided attention should not be overwritten by unknown even if set to true")
+
+	// has no attention
+	delete(addressMap, "attention")
+	expectedAddress.Attention = ""
+	suite.Equal(expectedAddress, MapToAddress(addressMap, suite.Config.ComponentAliases, false),
+		"Should ignore unknown components")
+	expectedAddress.Attention = "bar, foo, qux"
+	suite.Equal(expectedAddress, MapToAddress(addressMap, suite.Config.ComponentAliases, true),
+		"Should return unknown components sorted and joined with a comma")
+}

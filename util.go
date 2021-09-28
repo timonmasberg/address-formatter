@@ -3,6 +3,7 @@ package address_formatter
 import (
 	"errors"
 	"reflect"
+	"sort"
 	"strings"
 )
 
@@ -85,6 +86,7 @@ func MapToAddress(addressMap addressMap, componentAliases map[string]componentAl
 	if attention, hasAttention := addressMap["attention"]; hasAttention {
 		address.Attention = attention
 	} else if unknownAsAttention {
+		sort.Strings(unknownFieldValues)
 		address.Attention = strings.Join(unknownFieldValues, ", ")
 	}
 
