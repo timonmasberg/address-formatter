@@ -31,6 +31,8 @@ var addressMemberNameMapping = map[string]string{
 	"Hamlet":        "hamlet",
 	"PostalCity":    "postal_city",
 	"Neighbourhood": "neighbourhood",
+	"Quarter":       "quarter",
+	"Residential":   "residential",
 	"CityDistrict":  "city_district",
 } // (struct Name, template Name)
 

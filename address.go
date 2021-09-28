@@ -20,6 +20,8 @@ type Address struct {
 	StateCode     string
 	Region        string
 	Suburb        string
+	Quarter       string
+	Residential   string
 	Town          string
 	Island        string
 	Archipelago   string
