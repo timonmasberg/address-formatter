@@ -1,0 +1,27 @@
+name: Test and coverage
+
+on: [push, pull_request]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 2
+          submodules: recursive
+      - uses: actions/setup-go@v2
+        with:
+          go-version: '1.16'
+      - name: Copy OpenCageData templates
+        run: |
+          chmod +x "${GITHUB_WORKSPACE}/copy-templates.cmd"
+          ${GITHUB_WORKSPACE}/copy-templates.cmd
+      - name: Copy OpenCageData testcases
+        run: |
+          chmod +x "${GITHUB_WORKSPACE}/copy-testcases.cmd"
+          ${GITHUB_WORKSPACE}/copy-testcases.cmd
+      - name: Run test coverage
+        run: go test -race -coverprofile=coverage.txt -covermode=atomic
+      - name: Upload coverage to Codecov
+        run: bash <(curl -s https://codecov.io/bash)
