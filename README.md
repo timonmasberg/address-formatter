@@ -5,6 +5,7 @@ You can use the provided address structure or use a map of address components.
 
 [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=timonmasberg_address-formatter&metric=alert_status)](https://sonarcloud.io/dashboard?id=timonmasberg_address-formatter)
 [![Go Report Card](https://goreportcard.com/badge/github.com/timonmasberg/address-formatter)](https://goreportcard.com/report/github.com/timonmasberg/address-formatter)
+[![codecov](https://codecov.io/gh/timonmasberg/address-formatter/branch/master/graph/badge.svg?token=M18CWXGVL7)](https://codecov.io/gh/timonmasberg/address-formatter)
 
 ## Usage
 Import 
