@@ -1,6 +1,6 @@
 module github.com/timonmasberg/address-formatter
 
-go 1.18
+go 1.19
 
 require (
 	github.com/cbroglie/mustache v1.3.1
