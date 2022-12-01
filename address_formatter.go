@@ -2,7 +2,6 @@ package addrFmt
 
 import (
 	"errors"
-	"fmt"
 	"github.com/cbroglie/mustache"
 	"html"
 	"log"
@@ -14,19 +13,24 @@ var commonCountryCodeAliases = map[string]string{"UK": "GB"}
 var validReplacementComponents = []string{"state"}
 var requiredAddressProperties = []string{"road", "postcode"}
 
-var replacements = map[string]string{
-	`[\},\s]+$`:                  "",
-	`(?m)^[,\s]+`:                "",
-	`(?m)^- `:                    "",   // line starting with dash due to a parameter missing
-	`,\s*,`:                      ", ", // multiple commas to one
-	`[[:blank:]]+,[[:blank:]]+/`: ", ", // one horiz whitespace behind comma
-	`[[:blank:]][[:blank:]]+`:    " ",  // multiple horiz whitespace to one
-	`[[:blank:]]\n`:              "\n", // horiz whitespace, newline to newline
-	`\n,`:                        "\n", // newline comma to just newline
-	`,,+`:                        ",",  // multiple commas to one
-	`,\n`:                        "\n", // comma newline to just newline
-	`\n[[:blank:]]+`:             "\n", // newline plus space to newline
-	`\n\n+`:                      "\n", // multiple newline to one
+type replacement struct {
+	pattern *regexp.Regexp
+	replace string
+}
+
+var replacements = []replacement{
+	{pattern: regexp.MustCompile(`[\},\s]+$`), replace: ""},
+	{pattern: regexp.MustCompile(`(?m)^[,\s]+`), replace: ""},
+	{pattern: regexp.MustCompile(`(?m)^- `), replace: ""},                      // line starting with dash due to a parameter missing
+	{pattern: regexp.MustCompile(`,\s*,`), replace: ", "},                      // multiple commas to one
+	{pattern: regexp.MustCompile(`[[:blank:]]+,[[:blank:]]+/`), replace: ", "}, // one horiz whitespace behind comma
+	{pattern: regexp.MustCompile(`[[:blank:]][[:blank:]]+`), replace: " "},     // multiple horiz whitespace to one
+	{pattern: regexp.MustCompile(`[[:blank:]]\n`), replace: "\n"},              // horiz whitespace, newline to newline
+	{pattern: regexp.MustCompile(`\n,`), replace: "\n"},                        // newline comma to just newline
+	{pattern: regexp.MustCompile(`,,+`), replace: ","},                         // multiple commas to one
+	{pattern: regexp.MustCompile(`,\n`), replace: "\n"},                        // comma newline to just newline
+	{pattern: regexp.MustCompile(`\n[[:blank:]]+`), replace: "\n"},             // newline plus space to newline
+	{pattern: regexp.MustCompile(`\n\n+`), replace: "\n"},                      // multiple newline to one
 }
 
 // FormatAddress formats an Address object based on it
@@ -68,6 +72,8 @@ func applyTemplate(addressMap addressMap, template template, templates map[strin
 	return render, nil
 }
 
+var possibilitiesRegExp = regexp.MustCompile(`\s*\|\|\s*`)
+
 func getRenderInput(addressMap addressMap) map[string]interface{} {
 	input := make(map[string]interface{})
 
@@ -77,7 +83,7 @@ func getRenderInput(addressMap addressMap) map[string]interface{} {
 
 	input["first"] = func(t string, f func(string) (string, error)) (string, error) {
 		t, _ = f(t)
-		possibilities := regexp.MustCompile(`\s*\|\|\s*`).Split(t, -1)
+		possibilities := possibilitiesRegExp.Split(t, -1)
 
 		for _, possibility := range possibilities {
 			if possibility != "" {
@@ -125,14 +131,8 @@ func chooseTemplateText(address addressMap, template template, templates map[str
 }
 
 func cleanupRender(render string) (string, error) {
-	for regExp, replacement := range replacements {
-		r, err := regexp.Compile(regExp)
-
-		if err != nil {
-			return "", errors.New(fmt.Sprintf("Replace expression not compilable: %v", err))
-		}
-
-		render = r.ReplaceAllString(render, replacement)
+	for _, replacement := range replacements {
+		render = replacement.pattern.ReplaceAllString(render, replacement.replace)
 
 		render = dedupe(strings.Split(render, "\n"), "\n", func(s string) string {
 			return dedupe(strings.Split(s, ", "), ", ", func(s string) string {

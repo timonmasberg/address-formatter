@@ -48,6 +48,10 @@ func GetFixedAddress(addressMap addressMap, config *Config) (*Address, error) {
 	return address, nil
 }
 
+var washingtonCheck = regexp.MustCompile(`(?i)^washington,? d\.?c\.?`)
+var postcodeRangeCheck = regexp.MustCompile(`^(\d{5}),\d{5}`)
+var multiplePostcodeCheck = regexp.MustCompile(`\d+;\d+`)
+
 // this function is mostly ported from @fragaria/Address-formatter
 func cleanupAddress(address *Address, config *Config) {
 	if address.Country != "" && address.State != "" {
@@ -60,7 +64,7 @@ func cleanupAddress(address *Address, config *Config) {
 	if address.StateCode == "" && address.State != "" {
 		address.StateCode = getStateCode(address.State, address.CountryCode, config.StateCodes)
 
-		if regexp.MustCompile(`(?i)^washington,? d\.?c\.?`).MatchString(address.State) {
+		if washingtonCheck.MatchString(address.State) {
 			address.StateCode = "DC"
 			address.State = "District of Columbia"
 			address.City = "Washington"
@@ -72,11 +76,11 @@ func cleanupAddress(address *Address, config *Config) {
 	}
 
 	if address.Postcode != "" {
-		if len(address.Postcode) > 20 || regexp.MustCompile(`\d+;\d+`).MatchString(address.Postcode) {
+		if len(address.Postcode) > 20 || multiplePostcodeCheck.MatchString(address.Postcode) {
 			address.Postcode = ""
 
 		} else // postcode range
-		if matches := regexp.MustCompile(`^(\d{5}),\d{5}`).FindStringSubmatch(address.Postcode); len(matches) > 0 {
+		if matches := postcodeRangeCheck.FindStringSubmatch(address.Postcode); len(matches) > 0 {
 			address.Postcode = matches[1]
 		}
 	}
@@ -158,9 +162,10 @@ func addTemplateComponents(addressMap addressMap, addComponent string) {
 	}
 }
 
+var countryCheck = regexp.MustCompile(`\$(\w*)`)
+
 func determineCountry(addressMap addressMap, newCountry string) (string, error) {
-	r := regexp.MustCompile(`\$(\w*)`)
-	matches := r.FindStringSubmatch(newCountry)
+	matches := countryCheck.FindStringSubmatch(newCountry)
 
 	if matches != nil {
 		component := matches[1]
@@ -182,16 +187,19 @@ func determineCountry(addressMap addressMap, newCountry string) (string, error) 
 	return newCountry, nil
 }
 
+var sintMaartenCheck = regexp.MustCompile("(?i)sint maarten")
+var arubaCheck = regexp.MustCompile("(?i)aruba")
+
 // special conditions taken from other processors such as @fragaria/Address-formatter
 func applySpecialCases(addressMap addressMap) {
 	if addressMap["country_code"] == "NL" {
 		if addressMap["state"] == "Curaçao" {
 			addressMap["country_code"] = "CW"
 			addressMap["country"] = "Curaçao"
-		} else if isMatching, _ := regexp.MatchString("(?i)sint maarten", addressMap["state"]); isMatching {
+		} else if isMatching := sintMaartenCheck.MatchString(addressMap["state"]); isMatching {
 			addressMap["country_code"] = "SX"
 			addressMap["country"] = "Sint Maarten"
-		} else if isMatching, _ := regexp.MatchString("(?i)aruba", addressMap["state"]); isMatching {
+		} else if isMatching := arubaCheck.MatchString(addressMap["state"]); isMatching {
 			addressMap["country_code"] = "AW"
 			addressMap["country"] = "Aruba"
 		}
@@ -252,11 +260,11 @@ func getStateCode(state string, countryCode string, stateCodes map[string]map[st
 	return ""
 }
 
-func applyUrlCleanup(addressMap addressMap) {
-	r := regexp.MustCompile(`^https?://`)
+var urlCheck = regexp.MustCompile(`^https?://`)
 
+func applyUrlCleanup(addressMap addressMap) {
 	for k, v := range addressMap {
-		if r.MatchString(v) {
+		if urlCheck.MatchString(v) {
 			delete(addressMap, k)
 		}
 	}

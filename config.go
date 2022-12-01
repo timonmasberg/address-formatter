@@ -72,9 +72,11 @@ func getFileContent(path string) string {
 	return string(content)
 }
 
+var fileContentRegExp = regexp.MustCompile(` #`)
+
 func loadCountryCodesConfig(countryCodesPath string) map[string]string {
 	fileContent := getFileContent(countryCodesPath)
-	fileContent = regexp.MustCompile(` #`).ReplaceAllString(fileContent, "")
+	fileContent = fileContentRegExp.ReplaceAllString(fileContent, "")
 
 	var countryCodes map[string]string
 
