@@ -3,7 +3,7 @@ module github.com/timonmasberg/address-formatter
 go 1.18
 
 require (
-	github.com/cbroglie/mustache v1.4.0
+	github.com/cbroglie/mustache v1.4.2
 	github.com/stretchr/testify v1.7.0
 	gopkg.in/yaml.v3 v3.0.1
 )
